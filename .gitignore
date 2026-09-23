@@ -1,0 +1,35 @@
+# 依赖与构建产物（本项目零依赖，通常不会产生）
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# 日志与临时文件
+*.log
+npm-debug.log*
+logs/
+tmp/
+temp/
+*.tmp
+*.bak
+
+# 本地配置 / 环境变量（不要提交个人代理与令牌）
+.env
+.env.*
+!.env.example
+config.local.js
+
+# 缓存数据（本项目缓存仅在内存中，此处为保险起见）
+cache/
+.cache/
+*.sqlite
+*.db
+
+# 编辑器与系统文件
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

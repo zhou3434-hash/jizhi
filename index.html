@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>寻万卷书 · 书籍查询</title>
+<meta name="description" content="寻万卷书 —— 一个简朴的书籍查询站点，输入书名、作者或 ISBN，即可查看书籍封面与简介。">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="site-header" id="siteHeader">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="寻万卷书 首页">
+      <img class="brand-logo" src="assets/logo.svg" alt="寻万卷书">
+      <span class="brand-text">
+        <span class="brand-name">寻万卷书</span>
+        <span class="brand-sub">书籍查询 · 封面与简介</span>
+      </span>
+    </a>
+
+    <form class="search-form" id="searchForm" role="search" autocomplete="off">
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.4" y1="15.4" x2="20" y2="20"></line>
+        </svg>
+      </span>
+      <input id="searchInput" type="search" name="q" placeholder="输入书名、作者或 ISBN，例如：红楼梦 / 三体 / 9787020002207"
+             aria-label="搜索书籍" spellcheck="false">
+      <button type="submit" class="btn-search" id="searchBtn">查 询</button>
+    </form>
+
+    <p class="scope" id="scope">
+      <span class="scope-label">检索范围</span>
+      <label class="chk"><input type="checkbox" id="optLocal" checked><span>中文书库（豆瓣）</span></label>
+      <label class="chk"><input type="checkbox" id="optGlobal" checked><span>全球书库（Open Library）</span></label>
+      <span class="scope-hint">仅作书籍信息查询，不提供在线阅读</span>
+    </p>
+    <p class="mode-line"><span class="mode-tag" id="modeTag">正在检测本地服务……</span></p>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+
+  <!-- 结果列表 -->
+  <section class="results" id="results" hidden aria-label="检索结果">
+    <div class="results-head">
+      <h2 class="section-title">检索结果</h2>
+      <span class="count" id="resultCount"></span>
+      <button type="button" class="link-btn" id="toggleResults">收起</button>
+    </div>
+    <ul class="result-list" id="resultList"></ul>
+    <p class="more-hint" id="moreHint"></p>
+    <p class="tip" id="tip"></p>
+  </section>
+
+  <!-- 书籍详情：左封面 / 右介绍 -->
+  <section class="detail" id="detail" aria-live="polite">
+
+    <!-- 初始态：今日推荐 -->
+    <div class="state" id="stateWelcome">
+      <div class="state-art" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="58" height="58" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+          <path d="M32 15c-4.6-3.2-10.2-4.6-17-4.6v36c6.8 0 12.4 1.4 17 4.6 4.6-3.2 10.2-4.6 17-4.6v-36C42.2 10.4 36.6 11.8 32 15z"></path>
+          <path d="M32 15v36"></path>
+        </svg>
+      </div>
+      <h2 class="state-title">寻万卷书</h2>
+      <p class="state-text">于万卷之中，寻一书之名。<br>输入书名、作者或 ISBN，即可查看该书封面与内容简介。</p>
+
+      <!-- 随机推荐三本 -->
+      <section class="reco" aria-labelledby="recoTitle">
+        <div class="reco-head">
+          <h3 class="reco-title" id="recoTitle">今日推荐 · 随机三本</h3>
+          <button type="button" class="link-btn" id="recoRefresh">换一批</button>
+        </div>
+        <ul class="reco-grid" id="recoGrid" aria-live="polite">
+          <li class="reco-empty">正在挑选今日的书……</li>
+        </ul>
+        <p class="reco-note">点封面即可查询该书的封面与简介</p>
+      </section>
+
+      <p class="quote" id="quoteBox">
+        <span class="quote-text" id="quoteText"></span>
+        <span class="quote-from" id="quoteFrom"></span>
+      </p>
+
+      <p class="state-hint" id="imgHint" hidden>书库数据与封面均经本地服务转发，首次检索约需 5～15 秒。</p>
+    </div>
+
+    <!-- 加载中：骨架屏（快速数据源到达后立即被真实结果替换） -->
+    <div class="state" id="stateLoading" hidden>
+      <div class="spinner" id="loadingSpinner" aria-hidden="true"></div>
+      <div class="skeleton" id="loadingSkeleton" aria-hidden="true">
+        <div class="sk-cover"></div>
+        <div class="sk-lines">
+          <div class="sk-bar w60"></div>
+          <div class="sk-bar w35"></div>
+          <div class="sk-bar w80"></div>
+          <div class="sk-bar w70"></div>
+          <div class="sk-bar w45"></div>
+        </div>
+      </div>
+      <p class="state-text" id="loadingText">正在检索书库……</p>
+      <p class="state-hint" id="loadingHint"></p>
+    </div>
+
+    <!-- 无结果 / 出错 -->
+    <div class="state" id="stateEmpty" hidden>
+      <h2 class="state-title" id="emptyTitle">没有找到相关书籍</h2>
+      <p class="state-text" id="emptyText">试试更换关键词，或只输入作者名、ISBN 号码。</p>
+      <button type="button" class="btn-ghost" id="retryBtn" hidden>重新检索</button>
+    </div>
+
+    <!-- 详情内容 -->
+    <article class="book" id="book" hidden>
+      <div class="book-cover">
+        <div class="cover-frame" id="coverFrame"></div>
+        <p class="cover-cap" id="coverCap"></p>
+      </div>
+
+      <div class="book-info">
+        <p class="crumb" id="crumb"></p>
+        <h1 class="book-title" id="bookTitle"></h1>
+        <p class="book-author" id="bookAuthor"></p>
+        <p class="book-badges" id="bookBadges"></p>
+
+        <dl class="meta" id="bookMeta"></dl>
+
+        <div class="subjects" id="bookSubjects"></div>
+
+        <section class="desc-block">
+          <h2 class="desc-title">内容简介</h2>
+          <div class="desc" id="bookDesc"></div>
+          <p class="desc-more" id="descMore" hidden><button type="button" class="link-btn" id="descMoreBtn">展开全文</button></p>
+        </section>
+
+        <section class="editions" id="editionsBlock" hidden>
+          <h2 class="desc-title">其他版本 / 相关记录</h2>
+          <ul class="edition-list" id="editionList"></ul>
+        </section>
+
+        <div class="actions" id="bookActions"></div>
+        <p class="notice">本站为书籍信息查询工具，仅展示封面与简介，不提供在线阅读或下载。书名、简介与封面版权归原作者、出版社及数据提供方所有，本站仅作索引与展示。</p>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="foot-line">寻万卷书 · 书籍查询（封面与简介），不提供在线阅读或下载</p>
+    <p class="foot-line">
+      数据来源：<a href="https://openlibrary.org" target="_blank" rel="noopener noreferrer">Open Library</a>（开放书目数据）<span class="dot">·</span><a href="https://book.douban.com" target="_blank" rel="noopener noreferrer">豆瓣读书</a>（简介与封面，仅限本地个人查询）<span class="dot">·</span><a href="https://books.google.com" target="_blank" rel="noopener noreferrer">Google Books</a>
+    </p>
+    <p class="foot-line muted">书中文字、简介与封面图片的著作权归原作者及出版方所有；本项目仅用于技术学习与个人查询，不作商业用途。公开部署请关闭豆瓣源（<code>ENABLE_DOUBAN=0</code>），仅保留开放数据源。</p>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
